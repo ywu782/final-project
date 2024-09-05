@@ -1,0 +1,77 @@
+---
+title: "Final Project"
+author: "Kristin Wu"
+format: html
+execute: 
+  echo: false
+  warning: false
+  message: false
+---
+# Description:
+
+This dataset was collected with funding from the National Institute of Diabetes and Digestive and Kidney Diseases (NIDDK). The Pima Indian tribe located near Phoenix, Arizona (USA) has a very high rate of type 2 diabetes. This dataset includes a number of variables predictive of diabetes, and the outcome of a type 2 diabetes diagnosis within 5 years of the initial measurements. This dataset includes only females of at least 21 years of age, and of Pima Indian heritage, with at least 5 years of followup in a longitudinal study of diabetes.
+
+# Source:
+
+This data set was provided through funding from the National Institute of Diabetes and Digestive and Kidney Diseases (NIDDK) as the dataset “diabetes”. The donor of dataset to UCI was Vincent Sigillito of Johns Hopkins.
+
+
+```{r}
+library(here)
+library(gtsummary)
+library(tidyverse)
+library(ggplot2)
+
+load(here('data','diabetes.rda'))
+
+colnames(diabetes) <- c('pregnancy', 'glucose', 'dbp', 'triceps', 'insulin',
+												'bmi', 'pedigree', 'age', 'diabetes_status')
+
+diabetes <- mutate(diabetes,
+									 diabetes_status = factor(diabetes_status,
+									 												 labels = c('Negative', 'Positive')))
+
+```
+
+```{r}
+#| label: tbl-one
+#| tbl-cap: "Descriptive Statistics"
+table1 <- tbl_summary(
+	diabetes, by = diabetes_status, 
+	include = c(age, pregnancy, glucose, dbp, triceps, insulin, bmi, pedigree))
+
+table1
+
+```
+
+On average, subjects who were tested positive for diabetes in 5 years have a higher number of pregnancy (`r inline_text(table1, variable = "pregnancy", column = 'Positive')`) compared to subjects who were tested negative (`r inline_text(table1, variable = "pregnancy", column = 'Negative')`).
+
+```{r}
+#| label: tbl-two
+#| tbl-cap: "Logistic Regression"
+logistic_model <- glm( diabetes_status ~ pregnancy + glucose + bmi + age,
+											data = diabetes, family = binomial())
+tbl_regression(
+	logistic_model,
+	exponentiate = TRUE,
+	label = list(
+		pregnancy ~ "Number of Pregnancy",
+		glucose ~ "Plasma Glucose Concentration",
+		bmi ~ "BMI",
+		age ~ "Age"
+	))
+```
+
+```{r}
+#| label: fig-hist
+#| fig-cap: "Histogram of BMI"
+hist(diabetes$bmi)
+```
+
+@fig-hist contains a histogram and @tbl-one a table.
+
+```{r}
+mn_bmi <- median(diabetes$bmi, na.rm = TRUE)
+```
+
+The participants have an average BMI of `r mn_bmi`.
